@@ -77,7 +77,6 @@ h1, h2, h3, h4, h5, h6 {
 
 /* ============================================
    HOVER — Texto gradiente vira magenta sólido
-   (inverso do .hover-gradient-text)
    ============================================ */
 .hover-magenta-text {
   transition: all 0.25s ease;
@@ -91,8 +90,14 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ============================================
+   ÍCONES DE CATEGORIA — FORÇAR GRADIENTE VIA CSS
+   ============================================ */
+.categoria-icon svg {
+  stroke: url(#categoria-gradient) !important;
+}
+
+/* ============================================
    BOTÃO COM CONTORNO GRADIENTE
-   (padrão: borda + texto gradiente; hover: fill + texto branco)
    ============================================ */
 .btn-gradient-outline {
   position: relative;
@@ -139,14 +144,6 @@ h1, h2, h3, h4, h5, h6 {
   background: none;
   -webkit-text-fill-color: #ffffff;
   color: #ffffff;
-}
-
-/* ============================================
-   CATEGORIAS — GRADIENTE NOS ÍCONES
-   ============================================ */
-.categoria-icon svg {
-  stroke: url(#categoria-gradient);
-  color: transparent;
 }
 
 /* ============================================

@@ -47,7 +47,7 @@ export async function Categorias() {
               href={`/categoria/${categoria.slug}`}
               className="group flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-gray-100 bg-white p-4 text-center shadow-[0_1px_3px_0_rgb(0_0_0_/_0.04)] transition-all hover:border-brand-magenta/40 hover:shadow-md sm:p-5"
             >
-              <div className="flex h-12 w-12 items-center justify-center text-brand-magenta transition-transform duration-300 group-hover:scale-110 sm:h-14 sm:w-14">
+              <div className="flex h-12 w-12 items-center justify-center transition-transform duration-300 group-hover:scale-110 sm:h-14 sm:w-14">
                 {/* ✅ Usando o componente compartilhado */}
                 <CategoryIcon icone={categoria.icone} className="h-full w-full" />
               </div>
