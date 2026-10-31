@@ -28,9 +28,9 @@ export function Hero() {
         {/* Título */}
         <h1 className="mx-auto mt-6 max-w-4xl text-center text-4xl leading-[1.05] tracking-tight text-text-primary sm:text-5xl md:text-6xl lg:text-7xl">
           <span className="font-black">Achou em cheio.</span>{" "}
-          <span className="gradient-brand-text font-black">Pagou</span>
+          <span className="gradient-brand-text">Pagou</span>
           <br className="hidden md:block" />
-          <span className="gradient-brand-text font-black"> menos.</span>
+          <span className="gradient-brand-text"> menos.</span>
         </h1>
 
         {/* Subtítulo */}
