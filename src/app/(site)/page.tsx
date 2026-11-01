@@ -8,6 +8,9 @@ import { Newsletter } from "@/components/home/Newsletter";
 import { ofertaService, produtoService } from "@/lib/services";
 import type { Oferta, Produto } from "@/types";
 
+// ✅ Força a página a buscar dados novos sempre que for acessada
+export const dynamic = 'force-dynamic';
+
 export default async function HomePage() {
   // Buscar ofertas (para Ofertas do Dia + Em Alta)
   let todasOfertas: Oferta[] = [];
@@ -32,20 +35,15 @@ export default async function HomePage() {
   const ofertasEmAlta = [...todasOfertas]
     .filter((o) => o.precoOriginal && o.precoOriginal > o.precoAtual)
     .sort((a, b) => {
-      const descontoA =
-        ((a.precoOriginal! - a.precoAtual) / a.precoOriginal!) * 100;
-      const descontoB =
-        ((b.precoOriginal! - b.precoAtual) / b.precoOriginal!) * 100;
+      const descontoA = ((a.precoOriginal! - a.precoAtual) / a.precoOriginal!) * 100;
+      const descontoB = ((b.precoOriginal! - b.precoAtual) / b.precoOriginal!) * 100;
       return descontoB - descontoA;
     })
     .slice(0, 4);
 
   // Novidades: produtos mais recentes, primeiros 4
   const produtosNovidades = [...todosProdutos]
-    .sort(
-      (a, b) =>
-        new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime(),
-    )
+    .sort((a, b) => new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime())
     .slice(0, 4);
 
   return (
