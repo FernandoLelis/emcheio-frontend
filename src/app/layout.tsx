@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next"; // ✅ Importação do Analytics
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -32,6 +33,9 @@ export default function RootLayout({
         </svg>
 
         {children}
+        
+        {/* ✅ Componente do Vercel Analytics no final do body */}
+        <Analytics />
       </body>
     </html>
   );
