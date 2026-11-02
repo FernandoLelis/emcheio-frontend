@@ -8,13 +8,16 @@ import { Newsletter } from "@/components/home/Newsletter";
 import { ofertaService, produtoService } from "@/lib/services";
 import type { Oferta, Produto } from "@/types";
 
+// ✅ ISR: Mantém a página no cache por 60 segundos e revalida em segundo plano
+export const revalidate = 60;
+
 export default async function HomePage() {
   let todasOfertas: Oferta[] = [];
   let todosProdutos: Produto[] = [];
   let totalOfertasAtivas = 0;
 
   try {
-    // ✅ Busca a contagem exata para o Hero
+    // Busca a contagem exata para o Hero
     const contagem = await ofertaService.getContagem();
     totalOfertasAtivas = contagem.total;
 
@@ -42,7 +45,6 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* ✅ Passando o total de ofertas para o Hero */}
       <Hero totalOfertas={totalOfertasAtivas} />
       <OfertasDoDia ofertas={ofertasDoDia} />
       <CuponsAtivos />
