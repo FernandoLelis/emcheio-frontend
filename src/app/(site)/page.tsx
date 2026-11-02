@@ -8,30 +8,25 @@ import { Newsletter } from "@/components/home/Newsletter";
 import { ofertaService, produtoService } from "@/lib/services";
 import type { Oferta, Produto } from "@/types";
 
-// ✅ Força a página a buscar dados novos sempre que for acessada
-export const dynamic = 'force-dynamic';
-
 export default async function HomePage() {
-  // Buscar ofertas (para Ofertas do Dia + Em Alta)
   let todasOfertas: Oferta[] = [];
-  try {
-    todasOfertas = await ofertaService.listar();
-  } catch (error) {
-    console.error("❌ Erro ao buscar ofertas:", error);
-  }
-
-  // Buscar produtos (para Novidades)
   let todosProdutos: Produto[] = [];
+  let totalOfertasAtivas = 0;
+
   try {
+    // ✅ Busca a contagem exata para o Hero
+    const contagem = await ofertaService.getContagem();
+    totalOfertasAtivas = contagem.total;
+
+    // Busca os dados completos para as seções
+    todasOfertas = await ofertaService.listar();
     todosProdutos = await produtoService.listar();
   } catch (error) {
-    console.error("❌ Erro ao buscar produtos:", error);
+    console.error("❌ Erro ao buscar dados na Home:", error);
   }
 
-  // Ofertas do Dia: em destaque, primeiras 6
   const ofertasDoDia = todasOfertas.filter((o) => o.destaque).slice(0, 6);
 
-  // Em Alta: ordenar por maior desconto, primeiras 4
   const ofertasEmAlta = [...todasOfertas]
     .filter((o) => o.precoOriginal && o.precoOriginal > o.precoAtual)
     .sort((a, b) => {
@@ -41,14 +36,14 @@ export default async function HomePage() {
     })
     .slice(0, 4);
 
-  // Novidades: produtos mais recentes, primeiros 4
   const produtosNovidades = [...todosProdutos]
     .sort((a, b) => new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime())
     .slice(0, 4);
 
   return (
     <>
-      <Hero />
+      {/* ✅ Passando o total de ofertas para o Hero */}
+      <Hero totalOfertas={totalOfertasAtivas} />
       <OfertasDoDia ofertas={ofertasDoDia} />
       <CuponsAtivos />
       <EmAlta ofertas={ofertasEmAlta} />
