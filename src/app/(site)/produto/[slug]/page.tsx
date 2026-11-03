@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronRight } from "lucide-react";
-import { produtoService } from "@/lib/services";
+import { ChevronRight, Ticket } from "lucide-react"; // ✅ Importamos o ícone de cupom
+import { produtoService, cupomService } from "@/lib/services"; // ✅ Importamos o cupomService
 import { ProductCard } from "@/components/ui/ProductCard";
 import { StoreLogo } from "@/components/ui/StoreLogo";
-import type { Produto, Oferta } from "@/types";
+import type { Produto, Oferta, Cupom } from "@/types"; // ✅ Importamos o tipo Cupom
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -27,10 +27,18 @@ export default async function ProdutoPage({ params }: PageProps) {
   const { slug } = await params;
 
   let produto: Produto;
+  let cuponsValidos: Cupom[] = [];
+
+  // ✅ Busca produto e cupons em paralelo para performance
   try {
-    produto = await produtoService.buscarPorSlug(slug);
+    const [produtoData, cuponsData] = await Promise.all([
+      produtoService.buscarPorSlug(slug),
+      cupomService.listarValidos(),
+    ]);
+    produto = produtoData;
+    cuponsValidos = cuponsData;
   } catch (error) {
-    console.error("❌ Erro ao buscar produto:", error);
+    console.error("❌ Erro ao buscar dados do produto:", error);
     notFound();
   }
 
@@ -80,7 +88,7 @@ export default async function ProdutoPage({ params }: PageProps) {
         {/* Grid: Imagem + Info */}
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
           
-          {/* Imagem Principal (✅ bg-white no lugar de bg-gray-50) */}
+          {/* Imagem Principal */}
           <div className="flex items-center justify-center rounded-2xl border-2 border-gray-100 bg-white p-8">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -137,26 +145,29 @@ export default async function ProdutoPage({ params }: PageProps) {
           ) : (
             <div className="flex flex-col gap-3">
               {ofertasOrdenadas.map((oferta, index) => (
-                <OfertaRow key={oferta.id} oferta={oferta} isMelhorPreco={index === 0} />
+                <OfertaRow 
+                  key={oferta.id} 
+                  oferta={oferta} 
+                  isMelhorPreco={index === 0} 
+                  cupons={cuponsValidos} // ✅ Passando os cupons para o componente
+                />
               ))}
             </div>
           )}
         </div>
 
-        {/* ✅ Produtos Relacionados (Corrigido) */}
+        {/* Produtos Relacionados */}
         {relacionados.length > 0 && (
           <div className="mt-16">
             <h2 className="mb-6 text-xl font-bold text-text-primary sm:text-2xl">Produtos Relacionados</h2>
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
               {relacionados.map((rel) => {
-                // Pega a oferta mais barata do produto relacionado
                 const melhorOferta = rel.ofertas
                   ?.filter((o) => o.disponivel)
                   .sort((a, b) => Number(a.precoAtual) - Number(b.precoAtual))[0];
 
                 if (!melhorOferta) return null;
 
-                // ✅ A CORREÇÃO AQUI: "Gruda" o produto dentro da oferta
                 const ofertaComProduto: Oferta = {
                   ...melhorOferta,
                   produto: rel,
@@ -172,19 +183,22 @@ export default async function ProdutoPage({ params }: PageProps) {
   );
 }
 
-// Componente: Linha de oferta (mantido)
-function OfertaRow({ oferta, isMelhorPreco }: { oferta: Oferta; isMelhorPreco: boolean }) {
+// ✅ Componente OfertaRow atualizado para receber os cupons
+function OfertaRow({ oferta, isMelhorPreco, cupons }: { oferta: Oferta; isMelhorPreco: boolean; cupons: Cupom[] }) {
   const formatarPreco = (valor: number) => valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   const precoAtual = Number(oferta.precoAtual);
   const precoOriginal = oferta.precoOriginal ? Number(oferta.precoOriginal) : null;
   const desconto = precoOriginal && precoOriginal > precoAtual ? Math.round(((precoOriginal - precoAtual) / precoOriginal) * 100) : 0;
+
+  // ✅ Encontra o cupom da loja (usando toLowerCase para evitar erros de digitação)
+  const cupomDaLoja = cupons.find(c => c.loja.toLowerCase() === oferta.loja.toLowerCase());
 
   return (
     <div className={`flex flex-col gap-4 rounded-2xl border-2 p-4 transition-all sm:flex-row sm:items-center sm:gap-6 ${isMelhorPreco ? "border-success/40 bg-success/5" : "border-gray-100 bg-white hover:border-brand-magenta/40 hover:shadow-md"}`}>
       <div className="flex min-w-[140px] items-center gap-3">
         <StoreLogo loja={oferta.loja} />
       </div>
-      <div className="flex flex-1 flex-col gap-1">
+      <div className="flex flex-1 flex-col gap-2">
         {isMelhorPreco && (
           <span className="w-fit rounded-full bg-success px-2 py-0.5 text-xs font-bold text-white">Melhor preço</span>
         )}
@@ -197,6 +211,20 @@ function OfertaRow({ oferta, isMelhorPreco }: { oferta: Oferta; isMelhorPreco: b
             <span className="rounded-full bg-brand-magenta px-2 py-0.5 text-xs font-bold text-white">-{desconto}%</span>
           )}
         </div>
+
+        {/* ✅ VISUAL DO CUPOM EMBUTIDO */}
+        {cupomDaLoja && (
+          <div className="mt-1 flex w-fit items-center gap-2 rounded-lg border border-dashed border-brand-orange bg-orange-50 px-3 py-1.5 text-xs text-brand-orange">
+            <Ticket className="h-4 w-4" />
+            <span>Use o cupom:</span>
+            <span className="font-mono text-sm font-bold uppercase tracking-wider">{cupomDaLoja.codigo}</span>
+            {cupomDaLoja.descontoTexto && (
+              <span className="hidden sm:inline border-l border-orange-200 pl-2 font-semibold">
+                {cupomDaLoja.descontoTexto}
+              </span>
+            )}
+          </div>
+        )}
       </div>
       <a href={oferta.urlAfiliado} target="_blank" rel="noopener noreferrer" className="gradient-brand flex items-center justify-center rounded-xl px-6 py-3 text-sm font-bold text-white transition-transform hover:scale-[1.02] sm:w-auto">
         Ver Oferta →
