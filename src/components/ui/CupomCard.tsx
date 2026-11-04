@@ -35,14 +35,16 @@ export function CupomCard({ cupom }: CupomCardProps) {
         <StoreLogo loja={cupom.loja} />
       </div>
 
-      {/* Desconto */}
+      {/* Desconto e Condições */}
       <div className="text-center">
         <p className="gradient-brand-text text-2xl font-bold">
           {cupom.descontoTexto || "DESCONTO"}
         </p>
-        {cupom.descricao && (
-          <p className="mt-1 text-xs font-semibold text-text-secondary">
-            {cupom.descricao}
+        
+        {/* ✅ Trocamos descricao por condicoes e limitamos a 2 linhas */}
+        {cupom.condicoes && (
+          <p className="mt-1 line-clamp-2 text-xs font-semibold text-text-secondary" title={cupom.condicoes}>
+            {cupom.condicoes}
           </p>
         )}
       </div>
@@ -70,7 +72,7 @@ export function CupomCard({ cupom }: CupomCardProps) {
       {/* Espaço reservado para "Copiado!" */}
       <div className="mt-1 h-4">
         {copiado && (
-          <p className="text-center text-xs font-semibold text-success">
+          <p className="text-center text-xs font-normal text-success">
             Copiado!
           </p>
         )}

@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronRight, Ticket } from "lucide-react"; // ✅ Importamos o ícone de cupom
-import { produtoService, cupomService } from "@/lib/services"; // ✅ Importamos o cupomService
+import { ChevronRight, Ticket } from "lucide-react";
+import { produtoService, cupomService } from "@/lib/services";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { StoreLogo } from "@/components/ui/StoreLogo";
-import type { Produto, Oferta, Cupom } from "@/types"; // ✅ Importamos o tipo Cupom
+import { BotaoCopiarCupom } from "@/components/ui/BotaoCopiarCupom";
+import type { Produto, Oferta, Cupom } from "@/types";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -29,7 +30,6 @@ export default async function ProdutoPage({ params }: PageProps) {
   let produto: Produto;
   let cuponsValidos: Cupom[] = [];
 
-  // ✅ Busca produto e cupons em paralelo para performance
   try {
     const [produtoData, cuponsData] = await Promise.all([
       produtoService.buscarPorSlug(slug),
@@ -42,7 +42,6 @@ export default async function ProdutoPage({ params }: PageProps) {
     notFound();
   }
 
-  // Buscar produtos relacionados
   let relacionados: Produto[] = [];
   if (produto.categoriaId) {
     try {
@@ -55,7 +54,6 @@ export default async function ProdutoPage({ params }: PageProps) {
     }
   }
 
-  // Ordenar ofertas do produto principal por preço
   const ofertasOrdenadas = [...(produto.ofertas || [])]
     .filter((o) => o.disponivel)
     .sort((a, b) => Number(a.precoAtual) - Number(b.precoAtual));
@@ -70,7 +68,6 @@ export default async function ProdutoPage({ params }: PageProps) {
   return (
     <div className="bg-white">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
-        {/* Breadcrumb */}
         <nav className="mb-6 flex flex-wrap items-center gap-1 text-sm text-text-secondary">
           <Link href="/" className="hover-gradient-text transition-colors">Home</Link>
           <ChevronRight className="h-4 w-4" />
@@ -85,10 +82,7 @@ export default async function ProdutoPage({ params }: PageProps) {
           <span className="line-clamp-1 font-medium text-text-primary">{produto.nome}</span>
         </nav>
 
-        {/* Grid: Imagem + Info */}
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-          
-          {/* Imagem Principal */}
           <div className="flex items-center justify-center rounded-2xl border-2 border-gray-100 bg-white p-8">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
@@ -98,7 +92,6 @@ export default async function ProdutoPage({ params }: PageProps) {
             />
           </div>
 
-          {/* Informações */}
           <div className="flex flex-col gap-4">
             {produto.categoria && (
               <span className="w-fit rounded-full bg-brand-magenta/10 px-3 py-1 text-xs font-semibold text-brand-magenta">
@@ -132,7 +125,6 @@ export default async function ProdutoPage({ params }: PageProps) {
           </div>
         </div>
 
-        {/* Ofertas do Produto */}
         <div className="mt-12">
           <h2 className="mb-4 text-xl font-bold text-text-primary sm:text-2xl">
             Ofertas disponíveis ({ofertasOrdenadas.length})
@@ -149,14 +141,14 @@ export default async function ProdutoPage({ params }: PageProps) {
                   key={oferta.id} 
                   oferta={oferta} 
                   isMelhorPreco={index === 0} 
-                  cupons={cuponsValidos} // ✅ Passando os cupons para o componente
+                  cupons={cuponsValidos}
+                  categoriaId={produto.categoriaId}
                 />
               ))}
             </div>
           )}
         </div>
 
-        {/* Produtos Relacionados */}
         {relacionados.length > 0 && (
           <div className="mt-16">
             <h2 className="mb-6 text-xl font-bold text-text-primary sm:text-2xl">Produtos Relacionados</h2>
@@ -183,15 +175,32 @@ export default async function ProdutoPage({ params }: PageProps) {
   );
 }
 
-// ✅ Componente OfertaRow atualizado para receber os cupons
-function OfertaRow({ oferta, isMelhorPreco, cupons }: { oferta: Oferta; isMelhorPreco: boolean; cupons: Cupom[] }) {
+function OfertaRow({ 
+  oferta, 
+  isMelhorPreco, 
+  cupons, 
+  categoriaId 
+}: { 
+  oferta: Oferta; 
+  isMelhorPreco: boolean; 
+  cupons: Cupom[]; 
+  categoriaId?: number | null 
+}) {
   const formatarPreco = (valor: number) => valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
   const precoAtual = Number(oferta.precoAtual);
   const precoOriginal = oferta.precoOriginal ? Number(oferta.precoOriginal) : null;
   const desconto = precoOriginal && precoOriginal > precoAtual ? Math.round(((precoOriginal - precoAtual) / precoOriginal) * 100) : 0;
 
-  // ✅ Encontra o cupom da loja (usando toLowerCase para evitar erros de digitação)
-  const cupomDaLoja = cupons.find(c => c.loja.toLowerCase() === oferta.loja.toLowerCase());
+  const cuponsDaLoja = cupons.filter(c => {
+    if (c.loja.toLowerCase() !== oferta.loja.toLowerCase()) return false;
+    if (c.aplicarEmTodoSite) return true;
+    
+    if (c.categorias && c.categorias.length > 0) {
+      return c.categorias.some(cat => cat.id === categoriaId);
+    }
+    
+    return false;
+  });
 
   return (
     <div className={`flex flex-col gap-4 rounded-2xl border-2 p-4 transition-all sm:flex-row sm:items-center sm:gap-6 ${isMelhorPreco ? "border-success/40 bg-success/5" : "border-gray-100 bg-white hover:border-brand-magenta/40 hover:shadow-md"}`}>
@@ -212,21 +221,36 @@ function OfertaRow({ oferta, isMelhorPreco, cupons }: { oferta: Oferta; isMelhor
           )}
         </div>
 
-        {/* ✅ VISUAL DO CUPOM EMBUTIDO */}
-        {cupomDaLoja && (
-          <div className="mt-1 flex w-fit items-center gap-2 rounded-lg border border-dashed border-brand-orange bg-orange-50 px-3 py-1.5 text-xs text-brand-orange">
-            <Ticket className="h-4 w-4" />
-            <span>Use o cupom:</span>
-            <span className="font-mono text-sm font-bold uppercase tracking-wider">{cupomDaLoja.codigo}</span>
-            {cupomDaLoja.descontoTexto && (
-              <span className="hidden sm:inline border-l border-orange-200 pl-2 font-semibold">
-                {cupomDaLoja.descontoTexto}
-              </span>
-            )}
+        {/* ✅ GRID DE CUPONS: Um ao lado do outro */}
+        {cuponsDaLoja.length > 0 && (
+          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+            {cuponsDaLoja.map((cupom) => (
+              <div key={cupom.id} className="flex flex-col justify-between gap-1.5 rounded-lg border border-dashed border-brand-orange bg-orange-50/50 p-2">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5 overflow-hidden">
+                    <Ticket className="h-3 w-3 shrink-0 text-brand-orange" />
+                    <span className="truncate font-mono text-xs font-bold uppercase tracking-wider text-brand-orange">
+                      {cupom.codigo}
+                    </span>
+                    {cupom.descontoTexto && (
+                      <span className="hidden truncate text-[10px] font-semibold text-brand-orange sm:inline">
+                        {cupom.descontoTexto}
+                      </span>
+                    )}
+                  </div>
+                  <BotaoCopiarCupom codigo={cupom.codigo} />
+                </div>
+                {cupom.condicoes && (
+                  <p className="line-clamp-2 text-[10px] leading-tight text-orange-600/80">
+                    * {cupom.condicoes}
+                  </p>
+                )}
+              </div>
+            ))}
           </div>
         )}
       </div>
-      <a href={oferta.urlAfiliado} target="_blank" rel="noopener noreferrer" className="gradient-brand flex items-center justify-center rounded-xl px-6 py-3 text-sm font-bold text-white transition-transform hover:scale-[1.02] sm:w-auto">
+      <a href={oferta.urlAfiliado} target="_blank" rel="noopener noreferrer" className="gradient-brand flex shrink-0 items-center justify-center rounded-xl px-6 py-3 text-sm font-bold text-white transition-transform hover:scale-[1.02] sm:w-auto">
         Ver Oferta →
       </a>
     </div>
