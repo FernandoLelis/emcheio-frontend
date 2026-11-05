@@ -14,10 +14,9 @@ interface CategoriaModalProps {
   categoriaParaEditar?: Categoria | null;
 }
 
-// ✅ A MÁGICA ACONTECE AQUI: O .sort() no final da array
 const ICONES_DISPONIVEIS = [
   { value: "devices", label: "Eletrônicos" },
-  { value: "chef-hat", label: "Casa e Cozinha" },
+  { value: "chef-hat", label: "Cozinha" }, // ✅ Atualizado o nome para Cozinha (o ID continua chef-hat)
   { value: "shirt", label: "Moda" },
   { value: "gamepad", label: "Games" },
   { value: "tool", label: "Ferramentas" },
@@ -35,7 +34,8 @@ const ICONES_DISPONIVEIS = [
   { value: "shoe", label: "Calçados" },
   { value: "clock", label: "Relógios" },
   { value: "lipstick", label: "Beleza" },
-].sort((a, b) => a.label.localeCompare(b.label, "pt-BR")); // ✅ Ordena alfabeticamente pelo 'label'
+  { value: "home", label: "Casa" }, // ✅ NOVO: Opção de Casa
+].sort((a, b) => a.label.localeCompare(b.label, "pt-BR"));
 
 export function CategoriaModal({ 
   isOpen, 
