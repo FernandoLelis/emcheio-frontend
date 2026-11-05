@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Pencil, Trash2, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Copy, Ticket } from "lucide-react";
 import { cupomService } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import type { Cupom } from "@/types";
@@ -17,7 +17,6 @@ export default function AdminCuponsPage() {
     setCarregando(true);
     setErro("");
     try {
-      // Para o admin, listamos TODOS os cupons (inclusive vencidos)
       const data = await cupomService.listar();
       setCupons(data);
     } catch (error) {
@@ -36,11 +35,7 @@ export default function AdminCuponsPage() {
   }, []);
 
   const handleExcluir = async (id: number, codigo: string) => {
-    if (
-      !confirm(
-        `Tem certeza que deseja excluir o cupom "${codigo}"?`
-      )
-    ) {
+    if (!confirm(`Tem certeza que deseja excluir o cupom "${codigo}"?`)) {
       return;
     }
 
@@ -56,7 +51,6 @@ export default function AdminCuponsPage() {
     }
   };
 
-  // Função para formatar datas em DD/MM/YYYY HH:mm
   const formatarData = (dataString: string | null) => {
     if (!dataString) return "-";
     return new Date(dataString).toLocaleString("pt-BR", {
@@ -68,10 +62,9 @@ export default function AdminCuponsPage() {
     });
   };
 
-  // Função para determinar o status do cupom
   const getStatusCupom = (cupom: Cupom) => {
     const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0); // Zera a hora para comparar apenas a data
+    hoje.setHours(0, 0, 0, 0);
 
     const inicio = cupom.validadeInicio ? new Date(cupom.validadeInicio) : null;
     const fim = cupom.validadeFim ? new Date(cupom.validadeFim) : null;
@@ -85,15 +78,22 @@ export default function AdminCuponsPage() {
     return { label: "Ativo", color: "bg-green-100 text-green-700" };
   };
 
+  const cuponsVisiveis = cupons.filter((c) => getStatusCupom(c).label !== "Vencido");
+  const totalVencidos = cupons.length - cuponsVisiveis.length;
+
   return (
     <div className="space-y-6">
-      {/* Header da Página */}
       <div className="flex w-full flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-text-primary">Cupons</h1>
           <p className="text-sm text-text-secondary">
             Gerencie os cupons de desconto das lojas.
           </p>
+          {totalVencidos > 0 && (
+            <p className="mt-1 text-xs font-medium text-gray-400">
+              ({totalVencidos} cupom(ns) vencido(s) oculto(s))
+            </p>
+          )}
         </div>
 
         <Link
@@ -115,15 +115,15 @@ export default function AdminCuponsPage() {
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-brand-magenta" />
         </div>
-      ) : cupons.length === 0 ? (
+      ) : cuponsVisiveis.length === 0 ? (
         <div className="rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 py-12 text-center text-text-secondary">
-          Nenhum cupom cadastrado ainda.
+          Nenhum cupom ativo ou futuro no momento.
         </div>
       ) : (
         <>
           {/* ✅ VISÃO MOBILE: Cards empilhados (Oculto no Desktop) */}
           <div className="flex flex-col gap-4 md:hidden">
-            {cupons.map((cupom) => {
+            {cuponsVisiveis.map((cupom) => {
               const status = getStatusCupom(cupom);
               return (
                 <div
@@ -145,32 +145,44 @@ export default function AdminCuponsPage() {
                     </div>
                   </div>
 
+                  {/* NOVO: Categorias e Condições */}
+                  <div className="flex flex-col gap-2 rounded-xl bg-gray-50 p-3">
+                    <div className="flex flex-wrap gap-1">
+                      {cupom.aplicarEmTodoSite && (
+                        <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700">Todo Site</span>
+                      )}
+                      {cupom.categorias && cupom.categorias.map(cat => (
+                        <span key={cat.id} className="rounded bg-brand-magenta/10 px-1.5 py-0.5 text-[10px] font-semibold text-brand-magenta">
+                          {cat.nome}
+                        </span>
+                      ))}
+                      {!cupom.aplicarEmTodoSite && (!cupom.categorias || cupom.categorias.length === 0) && (
+                        <span className="text-[10px] text-gray-400 italic">Sem categoria específica</span>
+                      )}
+                    </div>
+                    {cupom.condicoes && (
+                      <p className="text-xs text-gray-600 line-clamp-2">
+                        <span className="font-semibold text-gray-500">Regras: </span>
+                        {cupom.condicoes}
+                      </p>
+                    )}
+                  </div>
+
                   {/* Meio: Validade */}
                   <div className="flex flex-col gap-1 rounded-xl bg-gray-50 p-3 text-xs">
                     <div className="flex items-center justify-between">
                       <span className="text-gray-500">Início:</span>
-                      <span className="font-medium text-text-primary">
-                        {cupom.validadeInicio ? formatarData(cupom.validadeInicio) : "-"}
-                      </span>
+                      <span className="font-medium text-text-primary">{cupom.validadeInicio ? formatarData(cupom.validadeInicio) : "-"}</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-gray-500">Fim:</span>
-                      <span className="font-medium text-text-primary">
-                        {cupom.validadeFim ? formatarData(cupom.validadeFim) : "-"}
-                      </span>
+                      <span className="font-medium text-text-primary">{cupom.validadeFim ? formatarData(cupom.validadeFim) : "-"}</span>
                     </div>
-                    {!cupom.validadeInicio && !cupom.validadeFim && (
-                      <span className="mt-1 text-center text-gray-400">
-                        Sem validade
-                      </span>
-                    )}
                   </div>
 
-                  {/* Status: Destaque + Ativo/Vencido/Futuro */}
+                  {/* Status */}
                   <div className="flex flex-wrap items-center gap-2">
-                    <span
-                      className={`w-fit rounded-full px-2 py-0.5 text-[10px] font-bold ${status.color}`}
-                    >
+                    <span className={`w-fit rounded-full px-2 py-0.5 text-[10px] font-bold ${status.color}`}>
                       {status.label}
                     </span>
                     {cupom.destaque && (
@@ -182,6 +194,13 @@ export default function AdminCuponsPage() {
 
                   {/* Rodapé: Ações */}
                   <div className="flex gap-2">
+                    <Link
+                      href={`/admin/cupons/novo?duplicar=${cupom.id}`}
+                      className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gray-100 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-200"
+                    >
+                      <Copy className="h-4 w-4" />
+                      Duplicar
+                    </Link>
                     <Link
                       href={`/admin/cupons/${cupom.id}`}
                       className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-gray-100 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-200"
@@ -210,19 +229,17 @@ export default function AdminCuponsPage() {
                   <tr>
                     <th className="px-6 py-4 font-bold">Loja</th>
                     <th className="px-6 py-4 font-bold">Código / Desconto</th>
+                    <th className="px-6 py-4 font-bold">Aplicação / Regras</th>
                     <th className="px-6 py-4 font-bold">Validade</th>
                     <th className="px-6 py-4 font-bold">Status</th>
                     <th className="px-6 py-4 font-bold text-right">Ações</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {cupons.map((cupom) => {
+                  {cuponsVisiveis.map((cupom) => {
                     const status = getStatusCupom(cupom);
                     return (
-                      <tr
-                        key={cupom.id}
-                        className="transition-colors hover:bg-gray-50"
-                      >
+                      <tr key={cupom.id} className="transition-colors hover:bg-gray-50">
                         <td className="px-6 py-4">
                           <div className="flex w-fit min-w-[100px] items-center justify-start">
                             <StoreLogo loja={cupom.loja} />
@@ -240,6 +257,30 @@ export default function AdminCuponsPage() {
                           </div>
                         </td>
 
+                        {/* ✅ NOVA COLUNA: Categorias e Condições */}
+                        <td className="px-6 py-4 max-w-[250px]">
+                          <div className="flex flex-col gap-1.5">
+                            <div className="flex flex-wrap gap-1">
+                              {cupom.aplicarEmTodoSite && (
+                                <span className="rounded bg-blue-100 px-1.5 py-0.5 text-[10px] font-semibold text-blue-700">Todo Site</span>
+                              )}
+                              {cupom.categorias && cupom.categorias.map(cat => (
+                                <span key={cat.id} className="rounded bg-brand-magenta/10 px-1.5 py-0.5 text-[10px] font-semibold text-brand-magenta">
+                                  {cat.nome}
+                                </span>
+                              ))}
+                              {!cupom.aplicarEmTodoSite && (!cupom.categorias || cupom.categorias.length === 0) && (
+                                <span className="text-[10px] text-gray-400 italic">Sem categoria</span>
+                              )}
+                            </div>
+                            {cupom.condicoes && (
+                              <span className="text-xs text-gray-500 line-clamp-1" title={cupom.condicoes}>
+                                {cupom.condicoes}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+
                         <td className="px-6 py-4 text-xs">
                           {cupom.validadeInicio && (
                             <div>De: {formatarData(cupom.validadeInicio)}</div>
@@ -254,9 +295,7 @@ export default function AdminCuponsPage() {
 
                         <td className="px-6 py-4">
                           <div className="flex flex-col gap-1">
-                            <span
-                              className={`w-fit rounded-full px-2 py-0.5 text-[10px] font-bold ${status.color}`}
-                            >
+                            <span className={`w-fit rounded-full px-2 py-0.5 text-[10px] font-bold ${status.color}`}>
                               {status.label}
                             </span>
                             {cupom.destaque && (
@@ -269,6 +308,13 @@ export default function AdminCuponsPage() {
 
                         <td className="px-6 py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
+                            <Link
+                              href={`/admin/cupons/novo?duplicar=${cupom.id}`}
+                              className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-blue-600"
+                              title="Duplicar Cupom"
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Link>
                             <Link
                               href={`/admin/cupons/${cupom.id}`}
                               className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-brand-magenta"

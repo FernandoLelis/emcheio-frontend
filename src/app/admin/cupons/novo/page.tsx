@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useRef, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Loader2, Save, X } from "lucide-react";
 import { cupomService, categoriaService } from "@/lib/services";
@@ -18,8 +18,20 @@ const LOJAS_DISPONIVEIS = [
 ];
 
 export default function NovoCupomPage() {
+  return (
+    <Suspense fallback={<div className="flex h-[50vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-brand-magenta" /></div>}>
+      <NovoCupomForm />
+    </Suspense>
+  );
+}
+
+function NovoCupomForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const duplicarId = searchParams.get("duplicar");
+
   const [carregando, setCarregando] = useState(false);
+  const [buscandoDados, setBuscandoDados] = useState(!!duplicarId);
   const [erro, setErro] = useState("");
   
   const [categorias, setCategorias] = useState<Categoria[]>([]);
@@ -46,6 +58,45 @@ export default function NovoCupomPage() {
       setCategorias(ordenadas);
     }).catch((err) => console.error("Erro ao buscar categorias:", err));
 
+    if (duplicarId) {
+      cupomService.buscarPorId(Number(duplicarId))
+        .then((cupom) => {
+          const formatarParaInput = (dataString: string | null) => {
+            if (!dataString) return "";
+            const d = new Date(dataString);
+            const ano = d.getFullYear();
+            const mes = String(d.getMonth() + 1).padStart(2, "0");
+            const dia = String(d.getDate()).padStart(2, "0");
+            const hora = String(d.getHours()).padStart(2, "0");
+            const minuto = String(d.getMinutes()).padStart(2, "0");
+            return `${ano}-${mes}-${dia}T${hora}:${minuto}`;
+          };
+
+          setFormData({
+            loja: cupom.loja,
+            codigo: "", // ✅ Vazio para o usuário digitar o novo
+            condicoes: cupom.condicoes || "",
+            descontoTexto: cupom.descontoTexto || "",
+            urlAfiliado: cupom.urlAfiliado || "",
+            validadeInicio: formatarParaInput(cupom.validadeInicio),
+            validadeFim: formatarParaInput(cupom.validadeFim),
+            destaque: cupom.destaque,
+            aplicarEmTodoSite: cupom.aplicarEmTodoSite || false,
+          });
+
+          if (cupom.categorias) {
+            setCategoriasSelecionadas(cupom.categorias);
+          }
+        })
+        .catch((err) => {
+          console.error("Erro ao buscar cupom para duplicar:", err);
+          setErro("Não foi possível carregar os dados do cupom para duplicar.");
+        })
+        .finally(() => {
+          setBuscandoDados(false);
+        });
+    }
+
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         setDropdownAberto(false);
@@ -53,7 +104,7 @@ export default function NovoCupomPage() {
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [duplicarId]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -120,6 +171,14 @@ export default function NovoCupomPage() {
     }
   };
 
+  if (buscandoDados) {
+    return (
+      <div className="flex h-[50vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-magenta" />
+      </div>
+    );
+  }
+
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div className="flex items-center gap-4">
@@ -127,8 +186,12 @@ export default function NovoCupomPage() {
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-text-primary">Novo Cupom</h1>
-          <p className="text-sm text-text-secondary">Cadastre um novo código de desconto.</p>
+          <h1 className="text-2xl font-bold text-text-primary">
+            {duplicarId ? "Duplicar Cupom" : "Novo Cupom"}
+          </h1>
+          <p className="text-sm text-text-secondary">
+            {duplicarId ? "Revise os dados e informe o novo código." : "Cadastre um novo código de desconto."}
+          </p>
         </div>
       </div>
 
@@ -151,7 +214,6 @@ export default function NovoCupomPage() {
             <input type="text" name="codigo" required value={formData.codigo} onChange={handleChange} className="w-full rounded-xl border border-gray-300 px-4 py-2.5 font-mono text-sm uppercase focus:border-brand-magenta focus:outline-none focus:ring-1 focus:ring-brand-magenta" placeholder="Ex: EMCHEIO20" />
           </div>
 
-          {/* ✅ Desconto e Condições lado a lado */}
           <div>
             <label className="mb-1 block text-sm font-medium text-text-primary">Desconto (Texto) *</label>
             <input type="text" name="descontoTexto" required value={formData.descontoTexto} onChange={handleChange} className="w-full rounded-xl border border-gray-300 px-4 py-2.5 text-sm focus:border-brand-magenta focus:outline-none focus:ring-1 focus:ring-brand-magenta" placeholder="Ex: R$ 20 OFF ou 10% OFF" />
@@ -170,7 +232,6 @@ export default function NovoCupomPage() {
             <p className="mt-1 text-xs text-gray-500">Se marcado, o cupom aparecerá em qualquer produto da loja selecionada.</p>
           </div>
 
-          {/* ✅ Dropdown de Categorias com bloqueio se for Todo Site */}
           <div className="relative sm:col-span-2" ref={dropdownRef}>
             <label className="mb-1 block text-sm font-medium text-text-primary">Categorias Específicas (Opcional)</label>
             <p className="mb-2 text-xs text-gray-500">Se não marcar nada e não for "Todo o Site", o cupom não aparecerá na página dos produtos.</p>
