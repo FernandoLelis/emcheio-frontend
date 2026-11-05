@@ -10,16 +10,41 @@ const BUSCAS_POPULARES = [
   "Tênis Running",
 ];
 
-export function Hero() {
+interface HeroProps {
+  totalOfertas?: number;
+}
+
+function formatarContador(total: number) {
+  if (!total || total === 0) return "50"; 
+  
+  let valorArredondado = 50;
+  if (total > 50 && total <= 100) valorArredondado = 100;
+  else if (total > 100 && total <= 200) valorArredondado = 200;
+  else if (total > 200 && total <= 300) valorArredondado = 300;
+  else if (total > 300 && total <= 400) valorArredondado = 400;
+  else if (total > 400 && total <= 500) valorArredondado = 500;
+  else if (total > 500 && total <= 1000) valorArredondado = 1000;
+  else if (total > 1000 && total <= 2000) valorArredondado = 2000;
+  else if (total > 2000 && total <= 3000) valorArredondado = 3000;
+  else if (total > 3000 && total <= 5000) valorArredondado = 5000;
+  else if (total > 5000 && total <= 10000) valorArredondado = 10000;
+  else if (total > 10000) valorArredondado = Math.floor(total / 1000) * 1000; 
+
+  return valorArredondado.toLocaleString("pt-BR");
+}
+
+export function Hero({ totalOfertas = 50 }: HeroProps) {
+  const contadorFormatado = formatarContador(totalOfertas);
+
   return (
     <section className="relative overflow-hidden border-b-2 border-gray-100 bg-white">
       <BackgroundDecorations />
 
       <div className="relative mx-auto max-w-5xl px-4 py-12 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
-        {/* Badge */}
+        {/* Badge com Contador Honesto */}
         <div className="flex justify-center">
           <span className="inline-flex items-center gap-2 rounded-full bg-brand-magenta/5 px-4 py-1.5 text-xs font-medium text-brand-magenta sm:text-sm">
-            🔥 Mais de 10.000 ofertas ativas agora
+            🔥 Mais de {contadorFormatado} ofertas ativas agora
           </span>
         </div>
 
