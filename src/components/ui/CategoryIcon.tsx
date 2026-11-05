@@ -21,10 +21,8 @@ import {
   IconHome, 
 } from "@tabler/icons-react";
 
-export const MAPA_ICONES: Record<
-  string,
-  React.ComponentType<{ className?: string; stroke?: string; strokeWidth?: number | string }>
-> = {
+// Tipagem simplificada para evitar conflitos de tipos na Vercel
+export const MAPA_ICONES: Record<string, React.ComponentType<any>> = {
   devices: IconDevices,
   "chef-hat": IconChefHat,
   shirt: IconShirt,
@@ -60,7 +58,6 @@ export function CategoryIcon({ icone, className = "h-6 w-6" }: CategoryIconProps
   
   return (
     <div className={`categoria-icon flex items-center justify-center ${className}`}>
-      {/* ✅ strokeWidth alterado para 1 (traço mais fino) */}
       <Icone className="h-full w-full" stroke="url(#categoria-gradient)" strokeWidth={1} />
     </div>
   );
@@ -77,7 +74,7 @@ export function BatomIcon({ className = "" }: { className?: string }) {
       <path
         d="M10 3 L10 2 C10 1.5 10.5 1 11 1 L13 1 C13.5 1 14 1.5 14 2 L14 3 L14 8 L10 8 Z"
         stroke="url(#categoria-gradient)"
-        strokeWidth="1" // ✅ Traço mais fino
+        strokeWidth="1"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -87,7 +84,7 @@ export function BatomIcon({ className = "" }: { className?: string }) {
         width="5"
         height="4"
         stroke="url(#categoria-gradient)"
-        strokeWidth="1" // ✅ Traço mais fino
+        strokeWidth="1"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -97,7 +94,7 @@ export function BatomIcon({ className = "" }: { className?: string }) {
         width="6"
         height="10"
         stroke="url(#categoria-gradient)"
-        strokeWidth="1" // ✅ Traço mais fino
+        strokeWidth="1"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -107,7 +104,7 @@ export function BatomIcon({ className = "" }: { className?: string }) {
         x2="15"
         y2="15"
         stroke="url(#categoria-gradient)"
-        strokeWidth="0.75" // ✅ Linha interna ainda mais fina
+        strokeWidth="0.75"
         strokeLinecap="round"
       />
     </svg>
