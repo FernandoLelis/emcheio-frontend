@@ -27,7 +27,8 @@ export function BotaoCompartilhar({ titulo, preco }: BotaoCompartilharProps) {
   return (
     <button
       onClick={compartilhar}
-      className="flex w-fit items-center gap-2 rounded-xl bg-green-50 px-4 py-2 text-sm font-bold text-green-700 transition-colors hover:bg-green-100"
+      // ✅ Adicionado cursor-pointer
+      className="flex w-fit cursor-pointer items-center gap-2 rounded-xl bg-green-50 px-4 py-2 text-sm font-bold text-green-700 transition-colors hover:bg-green-100"
       title="Compartilhar no WhatsApp"
     >
       <Share2 className="h-4 w-4" />

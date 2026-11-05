@@ -15,7 +15,8 @@ export function BotaoCopiarCupom({ codigo }: { codigo: string }) {
   return (
     <button
       onClick={copiar}
-      className="flex items-center gap-1 rounded bg-brand-orange/10 px-2 py-1 text-xs font-semibold text-brand-orange transition-colors hover:bg-brand-orange/20"
+      // ✅ Adicionado cursor-pointer
+      className="flex cursor-pointer items-center gap-1 rounded bg-brand-orange/10 px-2 py-1 text-xs font-semibold text-brand-orange transition-colors hover:bg-brand-orange/20"
       title="Copiar código"
     >
       {copiado ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}

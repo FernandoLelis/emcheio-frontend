@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation"; // ✅ Importando useRouter
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Logo } from "./Logo";
 
@@ -54,7 +54,7 @@ export function Header() {
         {/* Ícone notificação (desktop - 1100px+) */}
         <button
           type="button"
-          className="hidden rounded-lg p-2 text-text-secondary transition-colors hover:text-brand-magenta min-[1100px]:block"
+          className="hidden cursor-pointer rounded-lg p-2 text-text-secondary transition-colors hover:text-brand-magenta min-[1100px]:block"
           aria-label="Notificações"
         >
           <BellIcon />
@@ -63,7 +63,7 @@ export function Header() {
         {/* Menu mobile (hamburger) - abaixo de 1100px */}
         <button
           type="button"
-          className="ml-auto rounded-lg p-2 text-text-primary transition-colors hover:text-brand-magenta min-[1100px]:hidden"
+          className="ml-auto cursor-pointer rounded-lg p-2 text-text-primary transition-colors hover:text-brand-magenta min-[1100px]:hidden"
           onClick={() => setMenuAberto(!menuAberto)}
           aria-label={menuAberto ? "Fechar menu" : "Abrir menu"}
         >
@@ -77,8 +77,7 @@ export function Header() {
           <div className="mx-auto max-w-7xl space-y-3 px-4 py-4 sm:px-6">
             {/* Busca dentro do menu — apenas para mobile (< 768px) */}
             <div className="md:hidden">
-              {/* ✅ Passamos uma função para fechar o menu ao buscar */}
-              <BuscaInput onSearch={() => setMenuAberto(false)} />
+              <BuscaInput />
             </div>
 
             <div className="flex flex-col">
@@ -110,45 +109,20 @@ export function Header() {
   );
 }
 
-// ==========================================
-// SUBCOMPONENTE: Input de busca
-// ==========================================
-function BuscaInput({ onSearch }: { onSearch?: () => void }) {
-  const router = useRouter();
-  const [termo, setTermo] = useState("");
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (termo.trim()) {
-      // ✅ Redireciona para a página de busca com o termo na URL
-      router.push(`/busca?q=${encodeURIComponent(termo.trim())}`);
-      
-      // Se estiver no mobile, fecha o menu
-      if (onSearch) {
-        onSearch();
-      }
-      
-      // Limpa o campo após buscar (opcional, mas boa prática)
-      // setTermo(""); 
-    }
-  };
-
+function BuscaInput() {
   return (
     <form
-      onSubmit={handleSubmit}
       className="flex w-full items-center rounded-xl border border-gray-200 bg-white py-1 pl-4 pr-1 transition-all focus-within:border-brand-magenta/30 focus-within:shadow-sm"
+      onSubmit={(e) => e.preventDefault()}
     >
       <input
         type="search"
-        value={termo}
-        onChange={(e) => setTermo(e.target.value)}
         placeholder="Busque por produto, marca ou categoria..."
         className="flex-1 bg-transparent text-sm text-text-primary outline-none placeholder:text-text-secondary"
       />
       <button
         type="submit"
-        className="gradient-brand flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-white transition-transform hover:scale-105"
+        className="gradient-brand flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-lg text-white transition-transform hover:scale-105"
         aria-label="Buscar"
       >
         <SearchIcon />
@@ -157,9 +131,6 @@ function BuscaInput({ onSearch }: { onSearch?: () => void }) {
   );
 }
 
-// ==========================================
-// ÍCONES
-// ==========================================
 function SearchIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
