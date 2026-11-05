@@ -2,16 +2,19 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Plus, Pencil, Trash2, Loader2, Copy, Ticket } from "lucide-react";
+import { Plus, Pencil, Trash2, Loader2, Copy } from "lucide-react";
 import { cupomService } from "@/lib/services";
 import { ApiError } from "@/lib/api";
 import type { Cupom } from "@/types";
 import { StoreLogo } from "@/components/ui/StoreLogo";
 
+type FiltroStatus = "ativos" | "vencidos" | "todos";
+
 export default function AdminCuponsPage() {
   const [cupons, setCupons] = useState<Cupom[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
+  const [filtro, setFiltro] = useState<FiltroStatus>("ativos");
 
   const carregarCupons = async () => {
     setCarregando(true);
@@ -62,24 +65,33 @@ export default function AdminCuponsPage() {
     });
   };
 
+  // ✅ Lógica CORRIGIDA para considerar horas e minutos
   const getStatusCupom = (cupom: Cupom) => {
-    const hoje = new Date();
-    hoje.setHours(0, 0, 0, 0);
+    const agora = new Date(); // Pega a data e hora EXATA de agora
 
     const inicio = cupom.validadeInicio ? new Date(cupom.validadeInicio) : null;
     const fim = cupom.validadeFim ? new Date(cupom.validadeFim) : null;
 
-    if (fim && fim < hoje) {
+    // 1. Se já passou da data/hora de término
+    if (fim && fim < agora) {
       return { label: "Vencido", color: "bg-red-100 text-red-700" };
     }
-    if (inicio && inicio > hoje) {
+    // 2. Se ainda não chegou na data/hora de início
+    if (inicio && inicio > agora) {
       return { label: "Futuro", color: "bg-yellow-100 text-yellow-700" };
     }
+    // 3. Se estiver entre o início e o fim (ou sem limites)
     return { label: "Ativo", color: "bg-green-100 text-green-700" };
   };
 
-  const cuponsVisiveis = cupons.filter((c) => getStatusCupom(c).label !== "Vencido");
-  const totalVencidos = cupons.length - cuponsVisiveis.length;
+  const cuponsFiltrados = cupons.filter((c) => {
+    const status = getStatusCupom(c).label;
+    if (filtro === "ativos") return status !== "Vencido";
+    if (filtro === "vencidos") return status === "Vencido";
+    return true; // todos
+  });
+
+  const totalVencidos = cupons.filter(c => getStatusCupom(c).label === "Vencido").length;
 
   return (
     <div className="space-y-6">
@@ -89,11 +101,6 @@ export default function AdminCuponsPage() {
           <p className="text-sm text-text-secondary">
             Gerencie os cupons de desconto das lojas.
           </p>
-          {totalVencidos > 0 && (
-            <p className="mt-1 text-xs font-medium text-gray-400">
-              ({totalVencidos} cupom(ns) vencido(s) oculto(s))
-            </p>
-          )}
         </div>
 
         <Link
@@ -111,26 +118,58 @@ export default function AdminCuponsPage() {
         </div>
       )}
 
+      {/* ✅ ABAS DE FILTRO */}
+      <div className="flex flex-wrap items-center gap-2 border-b border-gray-200 pb-2">
+        <button
+          onClick={() => setFiltro("ativos")}
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            filtro === "ativos" ? "bg-brand-magenta/10 text-brand-magenta" : "text-gray-500 hover:bg-gray-100"
+          }`}
+        >
+          Ativos e Futuros
+        </button>
+        <button
+          onClick={() => setFiltro("vencidos")}
+          className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            filtro === "vencidos" ? "bg-brand-magenta/10 text-brand-magenta" : "text-gray-500 hover:bg-gray-100"
+          }`}
+        >
+          Vencidos
+          {totalVencidos > 0 && (
+            <span className="flex h-5 items-center justify-center rounded-full bg-gray-200 px-2 text-xs font-bold text-gray-600">
+              {totalVencidos}
+            </span>
+          )}
+        </button>
+        <button
+          onClick={() => setFiltro("todos")}
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+            filtro === "todos" ? "bg-brand-magenta/10 text-brand-magenta" : "text-gray-500 hover:bg-gray-100"
+          }`}
+        >
+          Todos
+        </button>
+      </div>
+
       {carregando ? (
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-brand-magenta" />
         </div>
-      ) : cuponsVisiveis.length === 0 ? (
+      ) : cuponsFiltrados.length === 0 ? (
         <div className="rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 py-12 text-center text-text-secondary">
-          Nenhum cupom ativo ou futuro no momento.
+          Nenhum cupom encontrado para este filtro.
         </div>
       ) : (
         <>
           {/* ✅ VISÃO MOBILE: Cards empilhados (Oculto no Desktop) */}
           <div className="flex flex-col gap-4 md:hidden">
-            {cuponsVisiveis.map((cupom) => {
+            {cuponsFiltrados.map((cupom) => {
               const status = getStatusCupom(cupom);
               return (
                 <div
                   key={cupom.id}
                   className="flex flex-col gap-4 rounded-2xl border-2 border-gray-100 bg-white p-4 shadow-sm"
                 >
-                  {/* Topo: Loja + Código/Desconto */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex w-fit min-w-[80px] items-center justify-start">
                       <StoreLogo loja={cupom.loja} />
@@ -145,7 +184,6 @@ export default function AdminCuponsPage() {
                     </div>
                   </div>
 
-                  {/* NOVO: Categorias e Condições */}
                   <div className="flex flex-col gap-2 rounded-xl bg-gray-50 p-3">
                     <div className="flex flex-wrap gap-1">
                       {cupom.aplicarEmTodoSite && (
@@ -168,7 +206,6 @@ export default function AdminCuponsPage() {
                     )}
                   </div>
 
-                  {/* Meio: Validade */}
                   <div className="flex flex-col gap-1 rounded-xl bg-gray-50 p-3 text-xs">
                     <div className="flex items-center justify-between">
                       <span className="text-gray-500">Início:</span>
@@ -180,7 +217,6 @@ export default function AdminCuponsPage() {
                     </div>
                   </div>
 
-                  {/* Status */}
                   <div className="flex flex-wrap items-center gap-2">
                     <span className={`w-fit rounded-full px-2 py-0.5 text-[10px] font-bold ${status.color}`}>
                       {status.label}
@@ -192,7 +228,6 @@ export default function AdminCuponsPage() {
                     )}
                   </div>
 
-                  {/* Rodapé: Ações */}
                   <div className="flex gap-2">
                     <Link
                       href={`/admin/cupons/novo?duplicar=${cupom.id}`}
@@ -236,7 +271,7 @@ export default function AdminCuponsPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {cuponsVisiveis.map((cupom) => {
+                  {cuponsFiltrados.map((cupom) => {
                     const status = getStatusCupom(cupom);
                     return (
                       <tr key={cupom.id} className="transition-colors hover:bg-gray-50">
@@ -257,7 +292,6 @@ export default function AdminCuponsPage() {
                           </div>
                         </td>
 
-                        {/* ✅ NOVA COLUNA: Categorias e Condições */}
                         <td className="px-6 py-4 max-w-[250px]">
                           <div className="flex flex-col gap-1.5">
                             <div className="flex flex-wrap gap-1">
