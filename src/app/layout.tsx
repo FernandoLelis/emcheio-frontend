@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Analytics } from "@vercel/analytics/next"; // ✅ Importação do Analytics
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,7 +14,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className="h-full">
+    // ✅ Adicionado 'scroll-smooth' para a rolagem ser suave
+    <html lang="pt-BR" className="h-full scroll-smooth">
       <head>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
@@ -34,7 +35,6 @@ export default function RootLayout({
 
         {children}
         
-        {/* ✅ Componente do Vercel Analytics no final do body */}
         <Analytics />
       </body>
     </html>

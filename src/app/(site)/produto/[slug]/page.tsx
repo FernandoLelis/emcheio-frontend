@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronRight, Ticket } from "lucide-react";
+import { ChevronRight, Ticket, ChevronDown } from "lucide-react";
 import { produtoService, cupomService } from "@/lib/services";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { StoreLogo } from "@/components/ui/StoreLogo";
 import { BotaoCopiarCupom } from "@/components/ui/BotaoCopiarCupom";
+import { BotaoCompartilhar } from "@/components/ui/BotaoCompartilhar";
 import type { Produto, Oferta, Cupom } from "@/types";
 
 interface PageProps {
@@ -15,9 +16,23 @@ export async function generateMetadata({ params }: PageProps) {
   const { slug } = await params;
   try {
     const produto = await produtoService.buscarPorSlug(slug);
+    
+    const menorOferta = produto.ofertas
+      ?.filter(o => o.disponivel)
+      .sort((a, b) => Number(a.precoAtual) - Number(b.precoAtual))[0];
+      
+    const precoFormatado = menorOferta 
+      ? Number(menorOferta.precoAtual).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+      : "";
+
     return {
       title: `${produto.nome} — EmCheio`,
-      description: produto.descricao || `Compare preços de ${produto.nome} nas melhores lojas.`,
+      description: `Compre ${produto.nome} por ${precoFormatado} no EmCheio! Compare preços e economize.`,
+      openGraph: {
+        title: `${produto.nome} por ${precoFormatado}`,
+        description: produto.descricao || `Compare preços de ${produto.nome} nas melhores lojas.`,
+        images: produto.imagemUrl ? [{ url: produto.imagemUrl }] : [],
+      },
     };
   } catch {
     return { title: "Produto não encontrado — EmCheio" };
@@ -58,7 +73,12 @@ export default async function ProdutoPage({ params }: PageProps) {
     .filter((o) => o.disponivel)
     .sort((a, b) => Number(a.precoAtual) - Number(b.precoAtual));
 
-  const menorPreco = ofertasOrdenadas.length > 0 ? Number(ofertasOrdenadas[0].precoAtual) : null;
+  const melhorOferta = ofertasOrdenadas[0];
+  const menorPreco = melhorOferta ? Number(melhorOferta.precoAtual) : null;
+  const precoOriginal = melhorOferta?.precoOriginal ? Number(melhorOferta.precoOriginal) : null;
+  const desconto = precoOriginal && precoOriginal > (menorPreco || 0) 
+    ? Math.round(((precoOriginal - (menorPreco || 0)) / precoOriginal) * 100) 
+    : 0;
 
   const formatarPreco = (valor: number) =>
     valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -109,15 +129,51 @@ export default async function ProdutoPage({ params }: PageProps) {
               </p>
             )}
 
+            {/* ✅ BLOCO DE PREÇOS ATUALIZADO */}
             {menorPreco !== null && (
-              <div className="mt-2">
-                <p className="text-xs text-text-secondary">A partir de:</p>
-                <p className="text-3xl font-extrabold text-success sm:text-4xl">{formatarPreco(menorPreco)}</p>
+              <div className="mt-2 flex flex-col gap-4 border-t border-gray-100 pt-4">
+                <div className="flex flex-col items-start gap-2">
+                  {/* Pílula verde do Melhor Oferta */}
+                  <span className="rounded-full bg-success px-3 py-1 text-xs font-bold text-white">
+                    Melhor Oferta
+                  </span>
+                  
+                  <div className="flex flex-wrap items-center gap-3">
+                    {precoOriginal && precoOriginal > menorPreco && (
+                      <span className="text-lg font-semibold text-text-secondary line-through">
+                        {formatarPreco(precoOriginal)}
+                      </span>
+                    )}
+                    <span className="text-3xl font-extrabold text-success sm:text-4xl">
+                      {formatarPreco(menorPreco)}
+                    </span>
+                    {desconto > 0 && (
+                      <span className="rounded-full bg-brand-magenta px-2.5 py-1 text-sm font-bold text-white">
+                        -{desconto}%
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <a 
+                    href="#ofertas" 
+                    className="gradient-brand flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white transition-transform hover:scale-[1.02]"
+                  >
+                    Ver Ofertas
+                    <ChevronDown className="h-4 w-4" />
+                  </a>
+                  
+                  <BotaoCompartilhar 
+                    titulo={produto.nome} 
+                    preco={formatarPreco(menorPreco)} 
+                  />
+                </div>
               </div>
             )}
 
             {produto.descricao && (
-              <div className="mt-2">
+              <div className="mt-4">
                 <h2 className="mb-2 text-sm font-bold text-text-primary">Descrição</h2>
                 <p className="text-sm leading-relaxed text-text-secondary">{produto.descricao}</p>
               </div>
@@ -125,7 +181,8 @@ export default async function ProdutoPage({ params }: PageProps) {
           </div>
         </div>
 
-        <div className="mt-12">
+        {/* ✅ ADICIONADO O ID="OFERTAS" E SCROLL-MT PARA A ÂNCORA FUNCIONAR */}
+        <div id="ofertas" className="mt-12 scroll-mt-24">
           <h2 className="mb-4 text-xl font-bold text-text-primary sm:text-2xl">
             Ofertas disponíveis ({ofertasOrdenadas.length})
           </h2>
@@ -154,14 +211,14 @@ export default async function ProdutoPage({ params }: PageProps) {
             <h2 className="mb-6 text-xl font-bold text-text-primary sm:text-2xl">Produtos Relacionados</h2>
             <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
               {relacionados.map((rel) => {
-                const melhorOferta = rel.ofertas
+                const melhorOfertaRel = rel.ofertas
                   ?.filter((o) => o.disponivel)
                   .sort((a, b) => Number(a.precoAtual) - Number(b.precoAtual))[0];
 
-                if (!melhorOferta) return null;
+                if (!melhorOfertaRel) return null;
 
                 const ofertaComProduto: Oferta = {
-                  ...melhorOferta,
+                  ...melhorOfertaRel,
                   produto: rel,
                 };
 
@@ -221,7 +278,6 @@ function OfertaRow({
           )}
         </div>
 
-        {/* ✅ BLOCO DE CUPONS COM TÍTULO EXTERNO */}
         {cuponsDaLoja.length > 0 && (
           <div className="mt-3 flex flex-col gap-2">
             <span className="text-xs font-bold uppercase tracking-wide text-text-secondary">
