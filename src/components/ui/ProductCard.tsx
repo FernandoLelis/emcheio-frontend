@@ -7,30 +7,23 @@ interface ProductCardProps {
 }
 
 export function ProductCard({ oferta }: ProductCardProps) {
-  // ✅ Converte Decimal (string) para number
   const precoAtual = Number(oferta.precoAtual);
-  const precoOriginal = oferta.precoOriginal
-    ? Number(oferta.precoOriginal)
-    : null;
+  const precoOriginal = oferta.precoOriginal ? Number(oferta.precoOriginal) : null;
 
-  const desconto =
-    precoOriginal && precoOriginal > precoAtual
+  const desconto = precoOriginal && precoOriginal > precoAtual
       ? Math.round(((precoOriginal - precoAtual) / precoOriginal) * 100)
       : 0;
 
   const nomeProduto = oferta.produto?.nome || "Produto sem nome";
-  const imagemUrl =
-    oferta.produto?.imagemUrl || "https://placehold.co/300x300?text=Sem+Imagem";
+  const imagemUrl = oferta.produto?.imagemUrl || "https://placehold.co/300x300?text=Sem+Imagem";
   const slugProduto = oferta.produto?.slug || "";
 
   const formatarPreco = (valor: number) =>
-    valor.toLocaleString("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    });
+    valor.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   return (
     <div className="group flex h-full flex-col overflow-hidden rounded-2xl border-2 border-gray-100 bg-white p-4 text-center shadow-[0_1px_3px_0_rgb(0_0_0_/_0.04)] transition-all hover:border-brand-magenta/40 hover:shadow-md">
+      
       {/* Imagem + Badge */}
       <div className="relative aspect-square w-full overflow-hidden">
         {desconto > 0 && (
@@ -71,14 +64,13 @@ export function ProductCard({ oferta }: ProductCardProps) {
             <StoreLogo loja={oferta.loja} />
           </div>
 
-          <a
-            href={oferta.urlAfiliado}
-            target="_blank"
-            rel="noopener noreferrer"
+          {/* ✅ Botão alterado para "Ver Produto" e link interno */}
+          <Link
+            href={`/produto/${slugProduto}`}
             className="gradient-brand mt-3 flex items-center justify-center rounded-lg py-2 text-xs font-bold text-white transition-transform hover:scale-[1.02]"
           >
-            Ver Oferta
-          </a>
+            Ver Produto
+          </Link>
         </div>
       </div>
     </div>

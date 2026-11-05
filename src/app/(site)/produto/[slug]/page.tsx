@@ -221,32 +221,44 @@ function OfertaRow({
           )}
         </div>
 
-        {/* ✅ GRID DE CUPONS: Um ao lado do outro */}
+        {/* ✅ BLOCO DE CUPONS COM TÍTULO EXTERNO */}
         {cuponsDaLoja.length > 0 && (
-          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            {cuponsDaLoja.map((cupom) => (
-              <div key={cupom.id} className="flex flex-col justify-between gap-1.5 rounded-lg border border-dashed border-brand-orange bg-orange-50/50 p-2">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex items-center gap-1.5 overflow-hidden">
-                    <Ticket className="h-3 w-3 shrink-0 text-brand-orange" />
-                    <span className="truncate font-mono text-xs font-bold uppercase tracking-wider text-brand-orange">
-                      {cupom.codigo}
-                    </span>
+          <div className="mt-3 flex flex-col gap-2">
+            <span className="text-xs font-bold uppercase tracking-wide text-text-secondary">
+              {cuponsDaLoja.length > 1 
+                ? "Cupons disponíveis para este produto" 
+                : "Cupom disponível para este produto"}
+            </span>
+            
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              {cuponsDaLoja.map((cupom) => (
+                <div key={cupom.id} className="flex flex-col justify-between gap-1.5 rounded-lg border border-dashed border-brand-orange bg-orange-50/50 p-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5 overflow-hidden">
+                      <Ticket className="h-3 w-3 shrink-0 text-brand-orange" />
+                      <span className="truncate font-mono text-sm font-bold uppercase tracking-wider text-brand-orange">
+                        {cupom.codigo}
+                      </span>
+                    </div>
+                    <BotaoCopiarCupom codigo={cupom.codigo} />
+                  </div>
+                  
+                  <div className="mt-1 flex items-center justify-between gap-2 border-t border-orange-200/50 pt-1.5">
                     {cupom.descontoTexto && (
-                      <span className="hidden truncate text-[10px] font-semibold text-brand-orange sm:inline">
+                      <span className="text-sm font-bold text-brand-orange truncate">
                         {cupom.descontoTexto}
                       </span>
                     )}
                   </div>
-                  <BotaoCopiarCupom codigo={cupom.codigo} />
+
+                  {cupom.condicoes && (
+                    <p className="line-clamp-2 text-[10px] leading-tight text-orange-600/80">
+                      * {cupom.condicoes}
+                    </p>
+                  )}
                 </div>
-                {cupom.condicoes && (
-                  <p className="line-clamp-2 text-[10px] leading-tight text-orange-600/80">
-                    * {cupom.condicoes}
-                  </p>
-                )}
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         )}
       </div>

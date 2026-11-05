@@ -18,10 +18,13 @@ import {
   IconShoe,
   IconClock,
   IconCategory,
-  IconHome, // ✅ NOVO: Ícone de Casa
+  IconHome, 
 } from "@tabler/icons-react";
 
-export const MAPA_ICONES: Record<string, React.ComponentType<{ className?: string; stroke?: number }>> = {
+export const MAPA_ICONES: Record<
+  string,
+  React.ComponentType<{ className?: string; stroke?: string; strokeWidth?: number | string }>
+> = {
   devices: IconDevices,
   "chef-hat": IconChefHat,
   shirt: IconShirt,
@@ -40,26 +43,27 @@ export const MAPA_ICONES: Record<string, React.ComponentType<{ className?: strin
   plant: IconPlant,
   shoe: IconShoe,
   clock: IconClock,
-  home: IconHome, // ✅ NOVO: Mapeamento do ícone
+  home: IconHome,
 };
 
 interface CategoryIconProps {
   icone: string | null;
   className?: string;
-  stroke?: number;
 }
 
-export function CategoryIcon({
-  icone,
-  className = "h-6 w-6",
-  stroke = 1.25,
-}: CategoryIconProps) {
+export function CategoryIcon({ icone, className = "h-6 w-6" }: CategoryIconProps) {
   if (icone === "lipstick") {
     return <BatomIcon className={className} />;
   }
 
   const Icone = icone ? MAPA_ICONES[icone] : IconCategory;
-  return <Icone className={className} stroke={stroke} />;
+  
+  return (
+    <div className={`categoria-icon flex items-center justify-center ${className}`}>
+      {/* ✅ strokeWidth alterado para 1 (traço mais fino) */}
+      <Icone className="h-full w-full" stroke="url(#categoria-gradient)" strokeWidth={1} />
+    </div>
+  );
 }
 
 export function BatomIcon({ className = "" }: { className?: string }) {
@@ -72,8 +76,8 @@ export function BatomIcon({ className = "" }: { className?: string }) {
     >
       <path
         d="M10 3 L10 2 C10 1.5 10.5 1 11 1 L13 1 C13.5 1 14 1.5 14 2 L14 3 L14 8 L10 8 Z"
-        stroke="currentColor"
-        strokeWidth="1.25"
+        stroke="url(#categoria-gradient)"
+        strokeWidth="1" // ✅ Traço mais fino
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -82,8 +86,8 @@ export function BatomIcon({ className = "" }: { className?: string }) {
         y="8"
         width="5"
         height="4"
-        stroke="currentColor"
-        strokeWidth="1.25"
+        stroke="url(#categoria-gradient)"
+        strokeWidth="1" // ✅ Traço mais fino
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -92,8 +96,8 @@ export function BatomIcon({ className = "" }: { className?: string }) {
         y="12"
         width="6"
         height="10"
-        stroke="currentColor"
-        strokeWidth="1.25"
+        stroke="url(#categoria-gradient)"
+        strokeWidth="1" // ✅ Traço mais fino
         strokeLinecap="round"
         strokeLinejoin="round"
       />
@@ -102,8 +106,8 @@ export function BatomIcon({ className = "" }: { className?: string }) {
         y1="15"
         x2="15"
         y2="15"
-        stroke="currentColor"
-        strokeWidth="1"
+        stroke="url(#categoria-gradient)"
+        strokeWidth="0.75" // ✅ Linha interna ainda mais fina
         strokeLinecap="round"
       />
     </svg>
