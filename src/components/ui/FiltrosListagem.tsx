@@ -37,48 +37,52 @@ export function FiltrosListagem({
   };
 
   return (
-    // ✅ Fundo removido, substituído por uma borda inferior sutil
-    <div className="mb-6 flex flex-wrap items-center gap-3 border-b border-gray-100 pb-4">
-      <div className="flex items-center gap-2 text-sm font-semibold text-text-secondary">
+    <div className="mb-6 flex flex-col gap-3 border-b border-gray-100 pb-4 md:flex-row md:items-center md:gap-4">
+      
+      {/* Título do Filtro (Oculto no mobile) */}
+      <div className="hidden items-center gap-2 text-sm font-semibold text-text-secondary md:flex">
         <Filter className="h-4 w-4" />
         Filtrar:
       </div>
 
-      {/* Filtro de Loja */}
-      <select
-        value={lojaAtual}
-        onChange={(e) => atualizarFiltro("loja", e.target.value)}
-        className="cursor-pointer rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-text-primary outline-none transition-colors focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta"
-      >
-        <option value="">Todas as lojas</option>
-        {lojasDisponiveis.map((loja) => (
-          <option key={loja} value={loja}>
-            {loja}
-          </option>
-        ))}
-      </select>
-
-      {/* Filtro de Categoria (Opcional) */}
-      {mostrarFiltroCategoria && (
+      {/* ✅ NOVO CONTAINER: Grid para não estourar a tela */}
+      <div className="grid w-full grid-cols-2 gap-2 md:flex md:w-auto md:items-center md:gap-4">
         <select
-          value={categoriaAtual}
-          onChange={(e) => atualizarFiltro("categoria", e.target.value)}
-          className="cursor-pointer rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-text-primary outline-none transition-colors focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta"
+          value={lojaAtual}
+          onChange={(e) => atualizarFiltro("loja", e.target.value)}
+          // ✅ Adicionado w-full, min-w-0 e truncate
+          className="w-full min-w-0 cursor-pointer truncate rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-text-primary outline-none transition-colors focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta md:w-auto md:flex-none"
         >
-          <option value="">Todas as categorias</option>
-          {categoriasDisponiveis.map((cat) => (
-            <option key={cat.id} value={cat.slug}>
-              {cat.nome}
+          <option value="">Lojas</option>
+          {lojasDisponiveis.map((loja) => (
+            <option key={loja} value={loja}>
+              {loja}
             </option>
           ))}
         </select>
-      )}
+
+        {mostrarFiltroCategoria && (
+          <select
+            value={categoriaAtual}
+            onChange={(e) => atualizarFiltro("categoria", e.target.value)}
+            // ✅ Adicionado w-full, min-w-0 e truncate
+            className="w-full min-w-0 cursor-pointer truncate rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-text-primary outline-none transition-colors focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta md:w-auto md:flex-none"
+          >
+            <option value="">Categorias</option>
+            {categoriasDisponiveis.map((cat) => (
+              <option key={cat.id} value={cat.slug}>
+                {cat.nome}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
 
       {/* Ordenação */}
       <select
         value={ordemAtual}
         onChange={(e) => atualizarFiltro("ordem", e.target.value)}
-        className="ml-auto cursor-pointer rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium text-text-primary outline-none transition-colors focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta"
+        className="w-full cursor-pointer truncate rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-text-primary outline-none transition-colors focus:border-brand-magenta focus:ring-1 focus:ring-brand-magenta md:ml-auto md:w-auto md:max-w-[200px]"
       >
         {opcoesOrdenacao.map((opcao) => (
           <option key={opcao.value} value={opcao.value}>
