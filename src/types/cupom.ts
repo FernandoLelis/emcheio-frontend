@@ -10,10 +10,15 @@ export interface Cupom {
   validadeInicio: string | null;
   validadeFim: string | null;
   destaque: boolean;
-  aplicarEmTodoSite: boolean; // ✅ Adicionado
+  aplicarEmTodoSite: boolean;
   criadoEm: string;
   condicoes?: string | null;
   categorias?: Categoria[];
+  
+  // ✅ ESTES SÃO OS CAMPOS QUE ESTAVAM FALTANDO
+  origem: string;
+  valorDesconto: number | null;
+  tipoDesconto: string | null;
 }
 
 export interface CreateCupomDto {
@@ -25,7 +30,7 @@ export interface CreateCupomDto {
   validadeInicio?: string;
   validadeFim?: string;
   destaque?: boolean;
-  aplicarEmTodoSite?: boolean; // ✅ Adicionado
+  aplicarEmTodoSite?: boolean;
   condicoes?: string;
   categoriaIds?: number[];
 }

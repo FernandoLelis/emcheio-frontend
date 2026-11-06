@@ -10,7 +10,6 @@ export const metadata = {
   description: "Todos os cupons de desconto válidos nas melhores lojas. Copie e economize.",
 };
 
-// ✅ Resolve o cache da Vercel (atualiza a cada 1 minuto)
 export const revalidate = 60;
 
 interface PageProps {
@@ -30,26 +29,36 @@ export default async function CuponsPage({ searchParams }: PageProps) {
     console.error("❌ Erro ao buscar cupons:", error);
   }
 
-  // Extrair lojas únicas antes de filtrar
   const lojasDisponiveis = Array.from(new Set(cupons.map((c) => c.loja))).sort();
 
-  // Aplicar Filtros
   let cuponsFiltrados = cupons;
   if (filtroLoja) {
     cuponsFiltrados = cuponsFiltrados.filter((c) => c.loja === filtroLoja);
   }
 
-  // Aplicar Ordenação
+  // ✅ ORDENAÇÃO INTELIGENTE (Separando % de R$)
   cuponsFiltrados = [...cuponsFiltrados].sort((a, b) => {
+    if (ordem === "maior-porcentagem") {
+      // Filtra apenas porcentagem e ordena pelo valor
+      if (a.tipoDesconto !== "porcentagem" && b.tipoDesconto !== "porcentagem") return 0;
+      if (a.tipoDesconto !== "porcentagem") return 1;
+      if (b.tipoDesconto !== "porcentagem") return -1;
+      return (b.valorDesconto || 0) - (a.valorDesconto || 0);
+    }
+    if (ordem === "maior-fixo") {
+      // Filtra apenas valor fixo e ordena pelo valor
+      if (a.tipoDesconto !== "fixo" && b.tipoDesconto !== "fixo") return 0;
+      if (a.tipoDesconto !== "fixo") return 1;
+      if (b.tipoDesconto !== "fixo") return -1;
+      return (b.valorDesconto || 0) - (a.valorDesconto || 0);
+    }
     if (ordem === "validade") {
       if (!a.validadeFim) return 1;
       if (!b.validadeFim) return -1;
       return new Date(a.validadeFim).getTime() - new Date(b.validadeFim).getTime();
     }
-    if (ordem === "novos") {
-      return new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime();
-    }
-    return 0;
+    // "novos" (padrão)
+    return new Date(b.criadoEm).getTime() - new Date(a.criadoEm).getTime();
   });
 
   return (
@@ -61,7 +70,7 @@ export default async function CuponsPage({ searchParams }: PageProps) {
           <span className="font-medium text-text-primary">Cupons</span>
         </nav>
 
-        <div className="mb-8">
+        <div className="mb-6">
           <div className="flex items-center gap-3">
             <TicketIcon className="h-8 w-8 sm:h-9 sm:w-9" />
             <h1 className="text-3xl font-bold text-text-primary sm:text-4xl">Cupons</h1>
@@ -75,6 +84,8 @@ export default async function CuponsPage({ searchParams }: PageProps) {
           lojasDisponiveis={lojasDisponiveis}
           opcoesOrdenacao={[
             { value: "validade", label: "Vencendo em breve" },
+            { value: "maior-porcentagem", label: "Maior % OFF" }, // ✅ Separado
+            { value: "maior-fixo", label: "Maior R$ OFF" },      // ✅ Separado
             { value: "novos", label: "Mais recentes" },
           ]}
         />
