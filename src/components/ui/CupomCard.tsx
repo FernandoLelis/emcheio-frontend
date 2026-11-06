@@ -30,20 +30,18 @@ export function CupomCard({ cupom }: CupomCardProps) {
 
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-2xl border-2 border-gray-100 bg-white p-4 shadow-[0_1px_3px_0_rgb(0_0_0_/_0.04)] transition-all hover:border-brand-magenta/40 hover:shadow-md">
-      
-      {/* Logo */}
       <div className="flex items-center justify-center pb-3">
         <StoreLogo loja={cupom.loja} />
       </div>
 
-      {/* Desconto com Altura Fixa para alinhamento */}
-      <div className="flex min-h-[3rem] items-center justify-center text-center">
-        <p className="gradient-brand-text text-2xl font-bold leading-tight">
+      {/* ✅ Desconto com limite de 2 linhas e altura fixa */}
+      <div className="flex min-h-[3.5rem] items-center justify-center text-center">
+        <p className="gradient-brand-text line-clamp-2 text-xl font-bold leading-tight" title={cupom.descontoTexto || "DESCONTO"}>
           {cupom.descontoTexto || "DESCONTO"}
         </p>
       </div>
 
-      {/* ✅ Condições com altura mínima (min-h) para não desalinhar os cards */}
+      {/* ✅ Condições com limite de 2 linhas e altura fixa */}
       <div className="mt-2 flex min-h-[2.5rem] items-start justify-center text-center">
         {cupom.condicoes ? (
           <p className="line-clamp-2 text-xs font-semibold text-text-secondary" title={cupom.condicoes}>
@@ -54,14 +52,13 @@ export function CupomCard({ cupom }: CupomCardProps) {
         )}
       </div>
 
-      {/* Código copiável */}
       <div className="mt-4">
         <button
           type="button"
           onClick={copiarCodigo}
           className="group/codigo relative flex w-full cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-3 py-2 transition-colors hover:border-brand-magenta/40 hover:bg-brand-magenta/5"
         >
-          <span className="font-sans text-sm font-bold tracking-wide text-text-primary">
+          <span className="truncate font-sans text-sm font-bold tracking-wide text-text-primary">
             {cupom.codigo}
           </span>
           <span className="absolute right-3 text-text-secondary transition-colors group-hover/codigo:text-brand-magenta">
@@ -74,9 +71,7 @@ export function CupomCard({ cupom }: CupomCardProps) {
         </button>
       </div>
 
-      {/* ✅ mt-auto empurra tudo o que está abaixo para o final do card */}
       <div className="mt-auto">
-        {/* Feedback Copiado - altura fixa */}
         <div className="mt-1 flex h-4 items-center justify-center">
           {copiado && (
             <p className="text-center text-xs font-semibold text-success">
@@ -85,7 +80,6 @@ export function CupomCard({ cupom }: CupomCardProps) {
           )}
         </div>
 
-        {/* Validade - altura fixa */}
         <div className="mt-1 flex h-4 items-center justify-center">
           {cupom.validadeFim && (
             <p className="text-center text-xs text-text-secondary">
@@ -99,7 +93,6 @@ export function CupomCard({ cupom }: CupomCardProps) {
           )}
         </div>
 
-        {/* Botão Usar Cupom */}
         <button
           type="button"
           onClick={usarCupom}
